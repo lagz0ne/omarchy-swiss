@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # Derives the "Swiss Light" Omarchy theme from Swiss: same structure and
 # tokens, paper and ink swapped, greys re-tuned to read on paper, and the
-# orange deepened a little so it holds contrast. Re-run after changing Swiss.
+# orange deepened so it holds contrast. Every terminal text color clears
+# 4.8:1 on the paper (muted is the terminal's bright black, used for dim
+# text). Re-run after changing Swiss.
 #   tools/make-light.py [src-theme-dir] [dst-theme-dir]  (defaults: themes/ in this repo)
 import os, re, shutil, subprocess, sys
 
@@ -13,9 +15,9 @@ dst = sys.argv[2] if len(sys.argv) > 2 else f"{REPO}/themes/swiss-light"
 
 COLORS = '''mode = "light"
 
-accent = "#6c7176"
+accent = "#62676b"
 selection = "#d9d8d2"
-muted = "#b9bab7"
+muted = "#686967"
 
 background = "#f1f0ec"
 dark_background = "#e8e7e2"
@@ -35,22 +37,22 @@ active_tab_background = "#6c7176"
 red = "#5d6367"
 yellow = "#2a2d30"
 green = "#4f5458"
-cyan = "#6e6e6e"
+cyan = "#666666"
 blue = "#43484c"
 magenta = "#55585a"
 
-bright_red = "#cc4b2c"
-bright_yellow = "#7a7365"
-bright_green = "#d9d8d2"
-bright_cyan = "#6e6e6e"
-bright_blue = "#8a8f93"
+bright_red = "#b64327"
+bright_yellow = "#6c6659"
+bright_green = "#606467"
+bright_cyan = "#666666"
+bright_blue = "#636669"
 bright_magenta = "#6a6a6a"
 '''
 
 # Dark Swiss value -> light counterpart, for shell.toml, btop and hyprland
 SWAP = {
     "#101315": "#f1f0ec", "#cacccc": "#16191b", "#798186": "#6c7176", "#565d60": "#8a8f93",
-    "#8b8d8e": "#74777a", "#4b4e55": "#b9bab7", "#de6145": "#cc4b2c", "#d9dbdc": "#2a2d30",
+    "#8b8d8e": "#74777a", "#4b4e55": "#b9bab7", "#de6145": "#b64327", "#d9dbdc": "#2a2d30",
     "#9fa5a9": "#4f5458", "#343d41": "#d9d8d2", "#a5aeb4": "#5d6367", "#a3a6a7": "#6a6d70",
     "#cbc2be": "#3a3d40", "#0c0e10": "#e8e7e2", "#080a0b": "#dfded8",
     "rgba(caccccff)": "rgba(16191bff)", "rgba(4b4e5580)": "rgba(16191b38)",
