@@ -2,6 +2,15 @@
 
 A Swiss-style look for [Omarchy](https://omarchy.org), from the bootloader to the desktop. Built for an ASUS Zenbook Duo (2880×1800 OLED), but nothing is tied to it.
 
+[![Swiss on a Zenbook Duo](docs/swiss.webp)](https://github.com/lagz0ne/omarchy-swiss/releases/download/v1.0/omarchy-swiss.mp4)
+
+<table><tr>
+<td width="50%"><a href="https://github.com/lagz0ne/omarchy-swiss/releases/download/v1.0/omarchy-swiss-outline.mp4"><img src="docs/swiss-outline.webp" alt="Swiss Outline"></a><br><sub>Swiss Outline</sub></td>
+<td width="50%"><a href="https://github.com/lagz0ne/omarchy-swiss/releases/download/v1.0/omarchy-swiss-light.mp4"><img src="docs/swiss-light.webp" alt="Swiss Light"></a><br><sub>Swiss Light</sub></td>
+</tr></table>
+
+<sub>Click a preview for the full-quality video.</sub>
+
 Every screen shares one grid: a bottom-left type block (small tracked label, big Nimbus Sans Bold heading, one line of copy) on a 120px margin, with squircle keys and a hairline progress line. Everything is greyscale except one warm accent, `#de6145`.
 
 | Screen | What you see |

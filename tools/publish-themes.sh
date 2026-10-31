@@ -40,7 +40,9 @@ for t in swiss swiss-outline swiss-light; do
 
 ${blurb[$t]}
 
-![Preview](preview.png)
+[![Preview](https://raw.githubusercontent.com/$owner/omarchy-swiss/main/docs/$t.webp)](https://github.com/$owner/omarchy-swiss/releases/download/v1.0/omarchy-$t.mp4)
+
+<sub>Click the preview for the full-quality video.</sub>
 
 ## Install
 
