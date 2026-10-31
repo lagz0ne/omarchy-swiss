@@ -1,0 +1,345 @@
+# Swiss Plymouth Theme
+# Bottom-left type block, one squircle per typed key, hairline progress along
+# the bottom edge. Images are rendered for an 1800px-tall screen and scaled by
+# k for anything else.
+
+Window.SetBackgroundTopColor(0.063, 0.075, 0.082);
+Window.SetBackgroundBottomColor(0.063, 0.075, 0.082);
+
+W = Window.GetWidth();
+H = Window.GetHeight();
+k = H / 1800;
+M = Math.Int(120 * k);
+KEY = Math.Int(44 * k);
+GAP = Math.Int(14 * k);
+MAX_KEYS = 32;
+HAIR = 2;
+
+fun scaled(img) {
+  return img.Scale(Math.Int(img.GetWidth() * k), Math.Int(img.GetHeight() * k));
+}
+
+fun place(sprite, img, x, y, z) {
+  sprite.SetImage(img);
+  sprite.SetPosition(x, y, z);
+  sprite.SetOpacity(0);
+}
+
+#----------------------------------------- Type block --------------------------------
+
+keys.y = H - M - KEY;
+keys.cy = keys.y + KEY / 2;
+
+sub.prompt = scaled(Image("sub-prompt.png"));
+sub.booting = scaled(Image("sub-booting.png"));
+sub.retry = scaled(Image("sub-retry.png"));
+sub.resuming = scaled(Image("sub-resuming.png"));
+sub.shutdown = scaled(Image("sub-shutdown.png"));
+sub.bottom = keys.y - Math.Int(40 * k);
+sub.sprite = Sprite();
+place(sub.sprite, sub.prompt, M, sub.bottom - sub.prompt.GetHeight(), 10);
+
+# Ink baselines match the lock and SDDM screens (measured at 1800px): heading
+# sits 154px above the sub line's bottom, label 99px above the heading. The
+# images are trimmed, so everything is flush with the margin at M.
+heading.image = scaled(Image("heading.png"));
+heading.y = sub.bottom - Math.Int(154 * k) - heading.image.GetHeight();
+heading.sprite = Sprite();
+place(heading.sprite, heading.image, M, heading.y, 10);
+
+label.image = scaled(Image("label.png"));
+label.sprite = Sprite();
+place(label.sprite, label.image, M, heading.y - Math.Int(99 * k) - label.image.GetHeight(), 10);
+
+# Shutdown and reboot get the same block, with nothing to type
+fun show_system_block(heading_file) {
+  heading.image = scaled(Image(heading_file));
+  heading.sprite.SetImage(heading.image);
+  heading.y = sub.bottom - Math.Int(154 * k) - heading.image.GetHeight();
+  heading.sprite.SetY(heading.y);
+  label.image = scaled(Image("label-system.png"));
+  label.sprite.SetImage(label.image);
+  label.sprite.SetY(heading.y - Math.Int(99 * k) - label.image.GetHeight());
+  sub.sprite.SetImage(sub.shutdown);
+  sub.sprite.SetY(sub.bottom - sub.shutdown.GetHeight());
+  label.sprite.SetOpacity(1);
+  heading.sprite.SetOpacity(1);
+  sub.sprite.SetOpacity(1);
+}
+
+#----------------------------------------- Keys --------------------------------
+
+key.fill_src = Image("squircle-fill.png");
+key.fill_err_src = Image("squircle-fill-err.png");
+key.outline_src = Image("squircle.png");
+key.fill = key.fill_src.Scale(KEY, KEY);
+key.fill_err = key.fill_err_src.Scale(KEY, KEY);
+key.outline = key.outline_src.Scale(KEY, KEY);
+key.outline_err = Image("squircle-err.png").Scale(KEY, KEY);
+key.outline_accent = Image("squircle-accent.png").Scale(KEY, KEY);
+
+key.sprites = [];          # one per typed key
+key.pop = [];              # frames since each key appeared, -1 when settled
+
+cursor.sprite = Sprite();
+place(cursor.sprite, key.outline_accent, M, keys.y, 11);
+
+ripple.sprite = Sprite();
+ripple.sprite.SetZ(11);
+ripple.sprite.SetOpacity(0);
+ripple.t = -1;
+ripple.cx = 0;
+
+fun key_x(i) {
+  return M + i * (KEY + GAP);
+}
+
+#----------------------------------------- Hairline --------------------------------
+
+hair.track = Sprite(Image("hair-track.png").Scale(W, HAIR));
+hair.track.SetPosition(0, H - HAIR, 20);
+hair.track.SetOpacity(0);
+
+hair.src = Image("hair.png");
+hair.sprite = Sprite();
+hair.sprite.SetPosition(0, H - HAIR, 21);
+hair.sprite.SetOpacity(0);
+
+#----------------------------------------- State --------------------------------
+
+global.frame = 0;
+global.visible = 0;         # type block shown
+global.submitted = 0;       # a passphrase has been sent
+global.retry = 0;           # last passphrase was rejected
+global.count = 0;           # keys drawn
+
+global.fake_progress_limit = 0.7;
+global.fake_progress_duration = 15.0;
+global.fake_progress_active = 0;
+global.fake_progress_start_frame = 0;
+global.fake_progress_start_time = 0.0;
+global.max_progress = 0.0;
+
+fun set_block_opacity(o) {
+  label.sprite.SetOpacity(o);
+  heading.sprite.SetOpacity(o);
+  sub.sprite.SetOpacity(o);
+  cursor.sprite.SetOpacity(o);
+}
+
+fun set_sub(img) {
+  sub.sprite.SetImage(img);
+  sub.sprite.SetY(sub.bottom - img.GetHeight());
+}
+
+fun set_error(on) {
+  global.retry = on;
+  for (i = 0; i < global.count; i++) {
+    if (on) key.sprites[i].SetImage(key.fill_err);
+    else key.sprites[i].SetImage(key.fill);
+  }
+  if (on) cursor.sprite.SetImage(key.outline_err);
+  else cursor.sprite.SetImage(key.outline_accent);
+}
+
+# Grow or shrink the row to n keys
+fun set_count(n) {
+  if (n > MAX_KEYS) n = MAX_KEYS;
+  while (global.count < n) {
+    i = global.count;
+    if (!key.sprites[i]) key.sprites[i] = Sprite();
+    key.sprites[i].SetImage(key.fill);
+    key.sprites[i].SetPosition(key_x(i), keys.y, 12);
+    key.sprites[i].SetOpacity(1);
+    key.pop[i] = 0;
+    global.count++;
+  }
+  while (global.count > n) {
+    global.count--;
+    key.sprites[global.count].SetOpacity(0);
+    key.pop[global.count] = -1;
+  }
+  cursor.sprite.SetX(key_x(global.count));
+}
+
+fun start_ripple(i) {
+  ripple.t = 0;
+  ripple.cx = key_x(i) + KEY / 2;
+}
+
+fun update_progress_bar(progress) {
+  if (progress > 1) progress = 1;
+  if (progress > global.max_progress) {
+    global.max_progress = progress;
+    width = Math.Int(W * progress);
+    if (width < 1) width = 1;
+    hair.sprite.SetImage(hair.src.Scale(width, HAIR));
+  }
+}
+
+fun start_progress() {
+  hair.track.SetOpacity(1);
+  hair.sprite.SetOpacity(1);
+  global.fake_progress_active = 1;
+  global.fake_progress_start_frame = global.frame;
+  global.fake_progress_start_time = 0.0;
+  global.max_progress = 0.0;
+  update_progress_bar(0.002);
+}
+
+fun stop_progress() {
+  global.fake_progress_active = 0;
+  hair.track.SetOpacity(0);
+  hair.sprite.SetOpacity(0);
+  global.max_progress = 0.0;
+}
+
+#----------------------------------------- Animation --------------------------------
+
+fun refresh_callback() {
+  global.frame++;
+  t = global.frame / 50.0;
+
+  if (global.visible) {
+    # Breathing cursor where the next key lands
+    if (!global.submitted) {
+      breath = 0.5 + 0.5 * Math.Sin(t * 2 * Math.Pi / 2.2);
+      cursor.sprite.SetOpacity(0.3 + 0.7 * breath);
+    }
+
+    for (i = 0; i < global.count; i++) {
+      # Pop-in: 0.4 -> 1.12 -> 1 over ~0.3s
+      if (key.pop[i] >= 0) {
+        p = key.pop[i] / 15.0;
+        if (p >= 1) {
+          key.pop[i] = -1;
+          key.sprites[i].SetImage(key.fill);
+          if (global.retry) key.sprites[i].SetImage(key.fill_err);
+          key.sprites[i].SetPosition(key_x(i), keys.y, 12);
+        } else {
+          s = 0.4 + 0.6 * p + 0.5 * Math.Sin(p * Math.Pi) * (1 - p);
+          size = Math.Int(KEY * s);
+          if (size < 2) size = 2;
+          key.sprites[i].SetImage(key.fill_src.Scale(size, size));
+          key.sprites[i].SetPosition(key_x(i) + (KEY - size) / 2, keys.cy - size / 2, 12);
+          key.pop[i]++;
+        }
+      }
+
+      # Wave across the keys while booting
+      if (global.submitted) {
+        w = 0.5 + 0.5 * Math.Cos(t * 2 * Math.Pi / 1.1 - i * 0.45);
+        key.sprites[i].SetOpacity(0.25 + 0.75 * w);
+      }
+    }
+
+    # Ripple off the newest key: grows to 1.8x and fades over ~0.5s
+    if (ripple.t >= 0) {
+      p = ripple.t / 25.0;
+      if (p >= 1) {
+        ripple.t = -1;
+        ripple.sprite.SetOpacity(0);
+      } else {
+        ease = 1 - (1 - p) * (1 - p);
+        size = Math.Int(KEY * (1 + 0.8 * ease));
+        ripple.sprite.SetImage(key.outline_src.Scale(size, size));
+        ripple.sprite.SetPosition(ripple.cx - size / 2, keys.cy - size / 2, 11);
+        ripple.sprite.SetOpacity(0.7 * (1 - p));
+        ripple.t++;
+      }
+    }
+  }
+
+  if (global.fake_progress_active) {
+    ratio = ((global.frame - global.fake_progress_start_frame) / 50.0) / global.fake_progress_duration;
+    if (ratio > 1) ratio = 1;
+    eased = 1 - (1 - ratio) * (1 - ratio);
+    update_progress_bar(eased * global.fake_progress_limit);
+  }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+#----------------------------------------- Password --------------------------------
+
+fun display_password_callback(prompt, bullets) {
+  if (!global.visible) {
+    global.visible = 1;
+    set_block_opacity(1);
+  }
+
+  # Prompt came back after a submit: the passphrase was wrong. Keep the
+  # submitted keys on screen in red until typing starts again.
+  if (global.submitted) {
+    global.submitted = 0;
+    stop_progress();
+    for (i = 0; i < global.count; i++) key.sprites[i].SetOpacity(1);
+    cursor.sprite.SetOpacity(1);
+    set_sub(sub.retry);
+    set_error(1);
+    return;
+  }
+
+  if (global.retry) {
+    if (bullets == 0) return;
+    set_error(0);
+    set_count(0);
+    set_sub(sub.prompt);
+  }
+
+  if (bullets > global.count && bullets <= MAX_KEYS) start_ripple(bullets - 1);
+  set_count(bullets);
+}
+
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+fun display_normal_callback() {
+  mode = Plymouth.GetMode();
+  if (global.visible && !global.submitted && (mode == "boot" || mode == "resume")) {
+    # Passphrase submitted: wave the keys and start the hairline
+    global.submitted = 1;
+    if (global.retry) set_error(0);
+    cursor.sprite.SetOpacity(0);
+    if (mode == "resume") set_sub(sub.resuming);
+    else set_sub(sub.booting);
+    start_progress();
+  }
+}
+
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+#----------------------------------------- Real progress --------------------------------
+
+fun progress_callback(duration, progress) {
+  # duration/progress freeze during decryption; only trust them once moving
+  if (global.fake_progress_start_time == 0.0) global.fake_progress_start_time = duration;
+  if (global.submitted && duration > global.fake_progress_start_time && progress > global.max_progress) {
+    global.fake_progress_active = 0;
+    update_progress_bar(progress);
+  }
+}
+
+Plymouth.SetBootProgressFunction(progress_callback);
+
+#----------------------------------------- Messages --------------------------------
+
+message_sprite = Sprite();
+message_sprite.SetPosition(M, M, 10000);
+
+fun display_message_callback(text) {
+  message_sprite.SetImage(Image.Text(text, 0.29, 0.31, 0.33));
+  message_sprite.SetOpacity(1);
+}
+
+fun hide_message_callback(text) {
+  message_sprite.SetOpacity(0);
+}
+
+Plymouth.SetDisplayMessageFunction(display_message_callback);
+Plymouth.SetHideMessageFunction(hide_message_callback);
+
+#----------------------------------------- Mode --------------------------------
+
+global.mode = Plymouth.GetMode();
+if (global.mode == "shutdown") show_system_block("heading-off.png");
+if (global.mode == "reboot") show_system_block("heading-restart.png");

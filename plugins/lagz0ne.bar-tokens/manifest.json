@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "lagz0ne.bar-tokens",
+  "name": "Bar Tokens",
+  "version": "1.0.0",
+  "author": "lagz0ne",
+  "description": "Applies the theme's [bar] icon-slot, icon-canvas, icon-font and status-slot keys, which Style otherwise ignores.",
+  "kinds": [
+    "service"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml"
+  }
+}

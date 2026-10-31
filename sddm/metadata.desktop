@@ -1,0 +1,8 @@
+[SddmGreeterTheme]
+Name=Swiss
+Description=Swiss type block, pulsing squircle, hairline progress
+Author=lagz0ne
+Type=sddm-theme
+Version=1.0
+QtVersion=6
+MainScript=Main.qml

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "lagz0ne.indicators",
+  "name": "My Indicators",
+  "version": "1.0.0",
+  "author": "lagz0ne",
+  "description": "Manual state indicators in fixed slots, dim when off",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Indicators.qml"
+  },
+  "barWidget": {
+    "displayName": "My Indicators",
+    "description": "Manual state indicators in fixed slots, dim when off",
+    "category": "Status",
+    "allowMultiple": true
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.indicators"
+  }
+}
