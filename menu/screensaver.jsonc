@@ -1,2 +1,2 @@
   // Swiss screensaver is an overlay in the lagz0ne.idle plugin, not the terminal one
-  "system.screensaver": {"action":"omarchy-shell idle screensaver"},
+  "system.screensaver": {"icon":"󱄄","label":"Screensaver","action":"omarchy-shell idle screensaver"},
