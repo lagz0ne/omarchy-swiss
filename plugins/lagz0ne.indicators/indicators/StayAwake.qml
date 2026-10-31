@@ -11,6 +11,9 @@ BarIndicator {
   inactiveText: "󰅶"
   activeTooltipText: "Allow Idle Lock & Screensaver"
   inactiveTooltipText: "Stay Awake"
+  // Orange while on, like the bell: idle lock and screensaver are off, easy to miss in grey.
+  useActiveColor: true
+  activeColor: "#de6145"
 
   function toggle() {
     if (root.idleService) root.idleService.setIdleEnabled(root.active)
