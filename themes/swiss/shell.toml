@@ -22,6 +22,11 @@ icon-slot        = 22
 icon-canvas      = 12
 icon-font        = 10
 status-slot      = 22
+# Open-panel mark (lagz0ne.bar-tokens): a short accent tick instead of the
+# stock full-width grey pill next to the module whose card is open.
+panel-mark        = "#de6145"
+panel-mark-alpha  = 0.8
+panel-mark-length = 0.75
 
 [hyprland]
 # Shared Hyprland-derived border tokens. Surface sections reference these so
