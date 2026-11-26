@@ -1,0 +1,13 @@
+# omarchy-settings' post_upgrade cp -f's its plymouthd.conf (Theme=omarchy) on
+# every upgrade. Put swiss back before 90-mkinitcpio-install rebuilds the UKI.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = omarchy-settings
+Target = plymouth
+
+[Action]
+Description = Keeping the swiss Plymouth theme...
+When = PostTransaction
+Exec = /bin/sh -c '[ -d /usr/share/plymouth/themes/swiss ] && sed -i "s/^Theme=.*/Theme=swiss/" /etc/plymouth/plymouthd.conf'

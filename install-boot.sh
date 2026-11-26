@@ -9,6 +9,7 @@ src=$(dirname "$(readlink -f "$0")")
 install -d /usr/share/plymouth/themes/swiss
 install -m644 "$src"/plymouth/* /usr/share/plymouth/themes/swiss/
 plymouth-set-default-theme swiss
+install -Dm644 "$src"/pacman/89-swiss-plymouth.hook /etc/pacman.d/hooks/89-swiss-plymouth.hook
 
 install -d /usr/share/sddm/themes/swiss /etc/sddm.conf.d
 install -m644 "$src"/sddm/* /usr/share/sddm/themes/swiss/
